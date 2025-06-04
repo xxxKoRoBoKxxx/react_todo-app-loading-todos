@@ -2,6 +2,7 @@
 /* eslint-disable jsx-a11y/control-has-associated-label */
 import React from 'react';
 import { Todo } from '../../types/Todo';
+import classNames from 'classnames';
 
 type Props = {
   todos: Todo[];
@@ -9,9 +10,18 @@ type Props = {
 
 export const Todos: React.FC<Props> = ({ todos }) => {
   return todos.map(todo => (
-    <div data-cy="Todo" className="todo" key={todo.id}>
+    <div
+      data-cy="Todo"
+      className={classNames('todo', { completed: todo.completed })}
+      key={todo.id}
+    >
       <label className="todo__status-label">
-        <input data-cy="TodoStatus" type="checkbox" className="todo__status" />
+        <input
+          data-cy="TodoStatus"
+          type="checkbox"
+          className="todo__status"
+          checked={todo.completed}
+        />
       </label>
 
       <span data-cy="TodoTitle" className="todo__title">

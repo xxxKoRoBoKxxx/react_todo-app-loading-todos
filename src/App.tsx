@@ -1,17 +1,60 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable jsx-a11y/control-has-associated-label */
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { UserWarning } from './UserWarning';
 import { getTodos, USER_ID } from './api/todos';
 import { Todo } from './types/Todo';
-import { Todos } from './components/Todo/Todo';
+import { Todos } from './components/Todos/Todos';
+import classNames from 'classnames';
+import { wait } from './utils/fetchClient';
+
+type TodosFilter = 'All' | 'Active' | 'Completed';
 
 export const App: React.FC = () => {
-  const [todosFromServer, setTodosFromServer] = useState<Todo[]>([]);
+  const [queuedTodos, setQueuedTodos] = useState<Todo[]>([]);
+  const [todosFilter, setTodosFilter] = useState<TodosFilter>('All');
+
+  const [error, setError] = useState('');
+
+  const todosFromServer = useRef<Todo[]>([]);
+  const [completedTodosCount, setCompletedTodosCount] = useState<number>(0);
+
+  const countCompletedTodos = useCallback<() => void>(() => {
+    setCompletedTodosCount(
+      todosFromServer.current.filter(todo => !todo.completed).length,
+    );
+  }, [todosFromServer]);
+
+  const updateTodosFromServer = useCallback(() => {
+    getTodos()
+      .then(todosRecieved => {
+        todosFromServer.current = [...todosRecieved];
+        setQueuedTodos([...todosRecieved]);
+        countCompletedTodos();
+      })
+      .catch(() => {
+        setError('noTodos');
+        wait(3000).then(() => setError(''));
+      });
+  }, []);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(updateTodosFromServer, []);
 
   useEffect(() => {
-    getTodos().then(todos => setTodosFromServer(todos));
-  }, []);
+    let newTodos: Todo[] = [];
+    const allTodos = [...todosFromServer.current];
+
+    if (todosFilter === 'Active') {
+      newTodos = allTodos.filter(todo => !todo.completed);
+    } else if (todosFilter === 'Completed') {
+      newTodos = allTodos.filter(todo => todo.completed);
+    } else {
+      newTodos = allTodos;
+    }
+
+    setQueuedTodos(newTodos);
+  }, [todosFilter]);
 
   if (!USER_ID) {
     return <UserWarning />;
@@ -42,7 +85,7 @@ export const App: React.FC = () => {
         </header>
 
         <section className="todoapp__main" data-cy="TodoList">
-          {todosFromServer.length > 0 && <Todos todos={todosFromServer} />}
+          {queuedTodos.length > 0 && <Todos todos={queuedTodos} />}
           {false && (
             <>
               {/* This is a completed todo */}
@@ -163,34 +206,43 @@ export const App: React.FC = () => {
         </section>
 
         {/* Hide the footer if there are no todos */}
-        {todosFromServer.length > 0 && (
+        {todosFromServer.current.length > 0 && (
           <footer className="todoapp__footer" data-cy="Footer">
             <span className="todo-count" data-cy="TodosCounter">
-              3 items left
+              {completedTodosCount} items left
             </span>
 
             {/* Active link should have the 'selected' class */}
             <nav className="filter" data-cy="Filter">
               <a
                 href="#/"
-                className="filter__link selected"
+                className={classNames('filter__link', {
+                  selected: todosFilter === 'All',
+                })}
                 data-cy="FilterLinkAll"
+                onClick={() => setTodosFilter('All')}
               >
                 All
               </a>
 
               <a
                 href="#/active"
-                className="filter__link"
+                className={classNames('filter__link', {
+                  selected: todosFilter === 'Active',
+                })}
                 data-cy="FilterLinkActive"
+                onClick={() => setTodosFilter('Active')}
               >
                 Active
               </a>
 
               <a
                 href="#/completed"
-                className="filter__link"
+                className={classNames('filter__link', {
+                  selected: todosFilter === 'Completed',
+                })}
                 data-cy="FilterLinkCompleted"
+                onClick={() => setTodosFilter('Completed')}
               >
                 Completed
               </a>
@@ -210,24 +262,35 @@ export const App: React.FC = () => {
 
       {/* DON'T use conditional rendering to hide the notification */}
       {/* Add the 'hidden' class to hide the message smoothly */}
-      {false && (
-        <div
-          data-cy="ErrorNotification"
-          className="notification is-danger is-light has-text-weight-normal"
-        >
-          <button data-cy="HideErrorButton" type="button" className="delete" />
-          {/* show only one message at a time */}
+      <div
+        data-cy="ErrorNotification"
+        className={classNames(
+          { hidden: !error },
+          'notification',
+          'is-danger',
+          'is-light',
+          'has-text-weight-normal',
+        )}
+      >
+        <button
+          data-cy="HideErrorButton"
+          type="button"
+          className="delete"
+          onClick={() => setError('')}
+        />
+        {/* show only one message at a time */}
+        <span className={classNames({ hidden: error === 'noTodos' })}>
           Unable to load todos
-          <br />
+        </span>
+        {/* <br />
           Title should not be empty
           <br />
           Unable to add a todo
           <br />
           Unable to delete a todo
           <br />
-          Unable to update a todo
-        </div>
-      )}
+          Unable to update a todo */}
+      </div>
     </div>
   );
 };
