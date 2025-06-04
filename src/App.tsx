@@ -36,7 +36,7 @@ export const App: React.FC = () => {
         setError('noTodos');
         wait(3000).then(() => setError(''));
       });
-  }, []);
+  }, [countCompletedTodos]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(updateTodosFromServer, []);
