@@ -1,14 +1,17 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable jsx-a11y/control-has-associated-label */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { UserWarning } from './UserWarning';
-import { getTodos, USER_ID } from './api/todos';
-import { Todo } from './types/Todo';
-import { Todos } from './components/Todos/Todos';
-import classNames from 'classnames';
-import { wait } from './utils/fetchClient';
 
-type TodosFilter = 'All' | 'Active' | 'Completed';
+import { getTodos, USER_ID } from './api/todos';
+import { wait } from './utils/fetchClient';
+import { Todo } from './types/Todo';
+import { TodosFilter } from './types/TodosFilter';
+
+import { UserWarning } from './UserWarning';
+import { Header } from './components/Header';
+import { Todos } from './components/Todos/Todos';
+import { Footer } from './components/Footer';
+import { ErrorNotification } from './components/ErrorNotification';
 
 export const App: React.FC = () => {
   const [queuedTodos, setQueuedTodos] = useState<Todo[]>([]);
@@ -23,7 +26,7 @@ export const App: React.FC = () => {
     setCompletedTodosCount(
       todosFromServer.current.filter(todo => !todo.completed).length,
     );
-  }, [todosFromServer]);
+  }, []);
 
   const updateTodosFromServer = useCallback(() => {
     getTodos()
@@ -33,7 +36,7 @@ export const App: React.FC = () => {
         countCompletedTodos();
       })
       .catch(() => {
-        setError('noTodos');
+        setError('Unable to load todos');
         wait(3000).then(() => setError(''));
       });
   }, [countCompletedTodos]);
@@ -65,24 +68,7 @@ export const App: React.FC = () => {
       <h1 className="todoapp__title">todos</h1>
 
       <div className="todoapp__content">
-        <header className="todoapp__header">
-          {/* this button should have `active` class only if all todos are completed */}
-          <button
-            type="button"
-            className="todoapp__toggle-all active"
-            data-cy="ToggleAllButton"
-          />
-
-          {/* Add a todo on form submit */}
-          <form>
-            <input
-              data-cy="NewTodoField"
-              type="text"
-              className="todoapp__new-todo"
-              placeholder="What needs to be done?"
-            />
-          </form>
-        </header>
+        <Header />
 
         <section className="todoapp__main" data-cy="TodoList">
           {queuedTodos.length > 0 && <Todos todos={queuedTodos} />}
@@ -207,90 +193,17 @@ export const App: React.FC = () => {
 
         {/* Hide the footer if there are no todos */}
         {todosFromServer.current.length > 0 && (
-          <footer className="todoapp__footer" data-cy="Footer">
-            <span className="todo-count" data-cy="TodosCounter">
-              {completedTodosCount} items left
-            </span>
-
-            {/* Active link should have the 'selected' class */}
-            <nav className="filter" data-cy="Filter">
-              <a
-                href="#/"
-                className={classNames('filter__link', {
-                  selected: todosFilter === 'All',
-                })}
-                data-cy="FilterLinkAll"
-                onClick={() => setTodosFilter('All')}
-              >
-                All
-              </a>
-
-              <a
-                href="#/active"
-                className={classNames('filter__link', {
-                  selected: todosFilter === 'Active',
-                })}
-                data-cy="FilterLinkActive"
-                onClick={() => setTodosFilter('Active')}
-              >
-                Active
-              </a>
-
-              <a
-                href="#/completed"
-                className={classNames('filter__link', {
-                  selected: todosFilter === 'Completed',
-                })}
-                data-cy="FilterLinkCompleted"
-                onClick={() => setTodosFilter('Completed')}
-              >
-                Completed
-              </a>
-            </nav>
-
-            {/* this button should be disabled if there are no completed todos */}
-            <button
-              type="button"
-              className="todoapp__clear-completed"
-              data-cy="ClearCompletedButton"
-            >
-              Clear completed
-            </button>
-          </footer>
+          <Footer
+            completedTodosCount={completedTodosCount}
+            todosFilter={todosFilter}
+            setTodosFilter={setTodosFilter}
+          />
         )}
       </div>
 
       {/* DON'T use conditional rendering to hide the notification */}
       {/* Add the 'hidden' class to hide the message smoothly */}
-      <div
-        data-cy="ErrorNotification"
-        className={classNames(
-          { hidden: !error },
-          'notification',
-          'is-danger',
-          'is-light',
-          'has-text-weight-normal',
-        )}
-      >
-        <button
-          data-cy="HideErrorButton"
-          type="button"
-          className="delete"
-          onClick={() => setError('')}
-        />
-        {/* show only one message at a time */}
-        <span className={classNames({ hidden: error === 'noTodos' })}>
-          Unable to load todos
-        </span>
-        {/* <br />
-          Title should not be empty
-          <br />
-          Unable to add a todo
-          <br />
-          Unable to delete a todo
-          <br />
-          Unable to update a todo */}
-      </div>
+      <ErrorNotification error={error} setError={setError} />
     </div>
   );
 };
