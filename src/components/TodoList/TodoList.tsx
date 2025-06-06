@@ -8,8 +8,6 @@ type Props = {
 };
 
 export const TodoList: React.FC<Props> = ({ todos }) => {
-  console.log('Todos in component:', [...todos]);
-
   return (
     <section className="todoapp__main" data-cy="TodoList">
       {todos.map(todo => (
@@ -24,6 +22,7 @@ export const TodoList: React.FC<Props> = ({ todos }) => {
               type="checkbox"
               className="todo__status"
               checked={todo.completed}
+              onChange={() => {}}
             />
           </label>
 

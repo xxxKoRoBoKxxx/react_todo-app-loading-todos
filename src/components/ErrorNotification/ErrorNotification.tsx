@@ -1,22 +1,36 @@
+import classNames from 'classnames';
 import React from 'react';
 
-type Props = {};
+type Props = {
+  error: string;
+  setError: React.Dispatch<React.SetStateAction<string>>;
+};
 
-export const ErrorNotification: React.FC<Props> = () => (
+export const ErrorNotification: React.FC<Props> = ({ error, setError }) => (
   <div
     data-cy="ErrorNotification"
-    className="notification is-danger is-light has-text-weight-normal"
+    className={classNames(
+      'notification',
+      'is-danger',
+      'is-light',
+      'has-text-weight-normal',
+      { hidden: error === '' },
+    )}
   >
-    <button data-cy="HideErrorButton" type="button" className="delete" />
-    {/* show only one message at a time */}
-    Unable to load todos
-    <br />
+    <button
+      data-cy="HideErrorButton"
+      type="button"
+      className="delete"
+      onClick={() => setError('')}
+    />
+    {error}
+    {/* <br />
     Title should not be empty
     <br />
     Unable to add a todo
     <br />
     Unable to delete a todo
     <br />
-    Unable to update a todo
+    Unable to update a todo */}
   </div>
 );

@@ -1,8 +1,14 @@
 import React from 'react';
 
-type Props = {};
+import { TodoFilter } from '../../types/TodoFilter';
+import classNames from 'classnames';
 
-export const Footer: React.FC<Props> = () => (
+type Props = {
+  filter: TodoFilter;
+  setFilter: React.Dispatch<React.SetStateAction<TodoFilter>>;
+};
+
+export const Footer: React.FC<Props> = ({ filter, setFilter }) => (
   <footer className="todoapp__footer" data-cy="Footer">
     <span className="todo-count" data-cy="TodosCounter">
       3 items left
@@ -10,18 +16,33 @@ export const Footer: React.FC<Props> = () => (
 
     {/* Active link should have the 'selected' class */}
     <nav className="filter" data-cy="Filter">
-      <a href="#/" className="filter__link selected" data-cy="FilterLinkAll">
+      <a
+        href="#/"
+        className={classNames('filter__link', { selected: filter === 'All' })}
+        data-cy="FilterLinkAll"
+        onClick={() => setFilter('All')}
+      >
         All
       </a>
 
-      <a href="#/active" className="filter__link" data-cy="FilterLinkActive">
+      <a
+        href="#/active"
+        className={classNames('filter__link', {
+          selected: filter === 'Active',
+        })}
+        data-cy="FilterLinkActive"
+        onClick={() => setFilter('Active')}
+      >
         Active
       </a>
 
       <a
         href="#/completed"
-        className="filter__link"
+        className={classNames('filter__link', {
+          selected: filter === 'Completed',
+        })}
         data-cy="FilterLinkCompleted"
+        onClick={() => setFilter('Completed')}
       >
         Completed
       </a>

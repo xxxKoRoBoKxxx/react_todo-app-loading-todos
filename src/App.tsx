@@ -1,32 +1,40 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable jsx-a11y/control-has-associated-label */
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+
 import { getTodos, USER_ID } from './api/todos';
+import { wait } from './utils/fetchClient';
+import { filteringTodos } from './utils/queueTodos';
+import { Todo } from './types/Todo';
+import { TodoFilter } from './types/TodoFilter';
 
 import { UserWarning } from './UserWarning';
 import { Header } from './components/Header';
 import { TodoList } from './components/TodoList';
 import { Footer } from './components/Footer';
 import { ErrorNotification } from './components/ErrorNotification';
-import { Todo } from './types/Todo';
 
 export const App: React.FC = () => {
+  const [allTodos, setAllTodos] = useState<Todo[]>([]);
+  const [filter, setFilter] = useState<TodoFilter>('All');
+  const [error, setError] = useState<string>('');
+
+  useEffect(() => {
+    getTodos()
+      .then(todosRecieved => {
+        setAllTodos(todosRecieved);
+      })
+      .catch(() => {
+        setError('Unable to load todos');
+        wait(3000).then(() => setError(''));
+      });
+  }, []);
+
   if (!USER_ID) {
     return <UserWarning />;
   }
 
-  let allTodos: Todo[] = [];
-
-  console.log('Initial todos:', [...allTodos]);
-
-  getTodos().then(todosFromServer => {
-    // todosFromServer.forEach(todo => allTodos.push(todo));
-    allTodos = [...todosFromServer];
-
-    console.log('Todos from server:', [...allTodos]);
-  });
-
-  console.log('New todos:', [...allTodos]);
+  const queuedTodos = filteringTodos(allTodos, filter);
 
   return (
     <div className="todoapp">
@@ -35,15 +43,14 @@ export const App: React.FC = () => {
       <div className="todoapp__content">
         <Header />
 
-        <TodoList todos={allTodos} />
+        <TodoList todos={queuedTodos} />
 
-        {/* Hide the footer if there are no todos */}
-        {allTodos.length > 0 && <Footer />}
+        {allTodos.length > 0 && (
+          <Footer filter={filter} setFilter={setFilter} />
+        )}
       </div>
 
-      {/* DON'T use conditional rendering to hide the notification */}
-      {/* Add the 'hidden' class to hide the message smoothly */}
-      <ErrorNotification />
+      <ErrorNotification error={error} setError={setError} />
     </div>
   );
 };
