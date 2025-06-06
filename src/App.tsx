@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { getTodos, USER_ID } from './api/todos';
 import { wait } from './utils/fetchClient';
 import { filteringTodos } from './utils/queueTodos';
+import { countItemsLeft } from './utils/countItemsLeft';
 import { Todo } from './types/Todo';
 import { TodoFilter } from './types/TodoFilter';
 
@@ -34,7 +35,8 @@ export const App: React.FC = () => {
     return <UserWarning />;
   }
 
-  const queuedTodos = filteringTodos(allTodos, filter);
+  const queuedTodos: Todo[] = filteringTodos(allTodos, filter);
+  const itemsLeft: number = countItemsLeft(allTodos);
 
   return (
     <div className="todoapp">
@@ -46,7 +48,7 @@ export const App: React.FC = () => {
         <TodoList todos={queuedTodos} />
 
         {allTodos.length > 0 && (
-          <Footer filter={filter} setFilter={setFilter} />
+          <Footer filter={filter} setFilter={setFilter} itemsLeft={itemsLeft} />
         )}
       </div>
 

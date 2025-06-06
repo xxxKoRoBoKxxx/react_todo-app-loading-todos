@@ -6,12 +6,13 @@ import classNames from 'classnames';
 type Props = {
   filter: TodoFilter;
   setFilter: React.Dispatch<React.SetStateAction<TodoFilter>>;
+  itemsLeft: number;
 };
 
-export const Footer: React.FC<Props> = ({ filter, setFilter }) => (
+export const Footer: React.FC<Props> = ({ filter, setFilter, itemsLeft }) => (
   <footer className="todoapp__footer" data-cy="Footer">
     <span className="todo-count" data-cy="TodosCounter">
-      3 items left
+      {itemsLeft} items left
     </span>
 
     {/* Active link should have the 'selected' class */}
