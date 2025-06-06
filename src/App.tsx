@@ -15,13 +15,13 @@ export const App: React.FC = () => {
     return <UserWarning />;
   }
 
-  const allTodos: Todo[] = [];
+  let allTodos: Todo[] = [];
 
   console.log('Initial todos:', [...allTodos]);
 
   getTodos().then(todosFromServer => {
-    todosFromServer.forEach(todo => allTodos.push(todo));
-    // allTodos = [...todosFromServer];
+    // todosFromServer.forEach(todo => allTodos.push(todo));
+    allTodos = [...todosFromServer];
 
     console.log('Todos from server:', [...allTodos]);
   });
